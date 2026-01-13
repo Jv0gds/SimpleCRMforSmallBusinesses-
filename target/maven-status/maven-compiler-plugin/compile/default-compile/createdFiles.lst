@@ -1,0 +1,9 @@
+com\crm\config\SecurityConfig.class
+com\crm\dto\LoginRequest.class
+com\crm\SimpleCrmApplication.class
+com\crm\service\UserService.class
+com\crm\dto\ApiResponse.class
+com\crm\service\impl\UserServiceImpl.class
+com\crm\repository\UserRepository.class
+com\crm\model\User.class
+com\crm\controller\UserController.class
