@@ -1,6 +1,8 @@
 package com.crm.controller;
 
 import com.crm.dto.LoginRequest;
+import com.crm.dto.UpdateProfileRequest;
+import com.crm.dto.UserProfileDto;
 import com.crm.dto.ApiResponse;
 import com.crm.model.User;
 import com.crm.service.UserService;
@@ -65,5 +67,50 @@ public class UserController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         return ResponseEntity.ok(ApiResponse.success("注销成功", null));
+    }
+
+    /**
+     * 获取用户个人资料接口
+     * @param userId 用户ID（通过请求头传递，模拟从认证Token中获取）
+     * @return 用户个人资料
+     */
+    @GetMapping("/user/profile")
+    public ResponseEntity<ApiResponse<UserProfileDto>> getUserProfile(
+            @RequestHeader(value = "X-User-Id", required = true) Long userId) {
+        try {
+            UserProfileDto profile = userService.getUserProfile(userId);
+            return ResponseEntity.ok(ApiResponse.success("获取个人资料成功", profile));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("获取个人资料失败：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 更新用户个人资料接口
+     * @param userId 用户ID（通过请求头传递，模拟从认证Token中获取）
+     * @param request 更新请求（包含用户名和可选的新密码）
+     * @return 更新后的用户个人资料
+     */
+    @PutMapping("/user/profile")
+    public ResponseEntity<ApiResponse<UserProfileDto>> updateUserProfile(
+            @RequestHeader(value = "X-User-Id", required = true) Long userId,
+            @Valid @RequestBody UpdateProfileRequest request) {
+        try {
+            UserProfileDto profile = userService.updateUserProfile(userId, request);
+            return ResponseEntity.ok(ApiResponse.success("个人资料更新成功", profile));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("更新个人资料失败：" + e.getMessage()));
+        }
     }
 }
