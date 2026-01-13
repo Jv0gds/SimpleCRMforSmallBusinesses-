@@ -45,6 +45,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserProfileDto getUserProfile(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId cannot be null");
+        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         
@@ -54,6 +57,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserProfileDto updateUserProfile(Long userId, UpdateProfileRequest request) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId cannot be null");
+        }
         // 查找用户
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
@@ -91,6 +97,9 @@ public class UserServiceImpl implements UserService {
      * 将User实体转换为UserProfileDto
      */
     private UserProfileDto convertToProfileDto(User user) {
+        if (user.getId() == null) {
+            throw new IllegalStateException("User ID cannot be null after retrieval");
+        }
         return new UserProfileDto(
                 user.getId(),
                 user.getEmail(),
