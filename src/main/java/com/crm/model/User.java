@@ -2,6 +2,8 @@ package com.crm.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 用户实体类
@@ -39,9 +41,20 @@ public class User {
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'")
     private LocalDateTime updatedAt;
     
-    @Column(name = "status", nullable = false, 
+    @Column(name = "status", nullable = false,
             columnDefinition = "TINYINT DEFAULT 1 COMMENT '账户状态：1-正常，0-禁用'")
     private Integer status = 1;
+    
+    /**
+     * 用户关联的角色集合（多对多关系）
+     */
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+    private Set<Role> roles = new HashSet<>();
     
     /**
      * JPA 要求的无参构造函数
@@ -138,6 +151,37 @@ public class User {
     
     public void setStatus(Integer status) {
         this.status = status;
+    }
+    
+    public Set<Role> getRoles() {
+        return roles;
+    }
+    
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+    
+    /**
+     * 添加角色到用户
+     */
+    public void addRole(Role role) {
+        this.roles.add(role);
+        role.getUsers().add(this);
+    }
+    
+    /**
+     * 从用户移除角色
+     */
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+        role.getUsers().remove(this);
+    }
+    
+    /**
+     * 检查用户是否拥有指定角色
+     */
+    public boolean hasRole(String roleName) {
+        return roles.stream().anyMatch(role -> role.getName().equals(roleName));
     }
     
     /**
