@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard - Simple CRM</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #17a2b8;
+        }
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        .card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .nav-links a {
+            padding: 0.5rem 1rem;
+            background-color: #f8f9fa;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1 style="margin: 0;">💼 Sales Representative Dashboard</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Manage your customers and opportunities</p>
+        </div>
+
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>My Customers</h3>
+                <p>✅ View My Customers</p>
+                <p>✅ Add New Customers</p>
+                <p>✅ Update Customer Info</p>
+                <p>✅ Track Interactions</p>
+            </div>
+            <div class="card">
+                <h3>My Opportunities</h3>
+                <p>✅ View My Opportunities</p>
+                <p>✅ Create New Opportunities</p>
+                <p>✅ Update Deal Status</p>
+                <p>✅ Track Progress</p>
+            </div>
+            <div class="card">
+                <h3>My Performance</h3>
+                <p>✅ Personal Reports</p>
+                <p>✅ Sales Metrics</p>
+                <p>✅ Activity Log</p>
+                <p>✅ Goals & Targets</p>
+            </div>
+        </div>
+
+        <div style="background-color: #d1ecf1; padding: 1rem; border-radius: 4px; border-left: 4px solid #17a2b8; margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 0.5rem 0; color: #0c5460;">💡 Sales Rep Notice</h3>
+            <p style="margin: 0; color: #0c5460;">You have access to your own customers and opportunities. Keep your data up to date!</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="nav-links">
+            <a href="/profile.html">👤 My Profile</a>
+            <a href="/login.html" id="logoutLink">🚪 Logout</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageDiv = document.getElementById('message');
+            const userId = localStorage.getItem('userId');
+
+            // Check if user has sales rep, manager, or admin role
+            const roles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+            const hasAccess = roles.some(role => 
+                role.name === 'SALES_REP' || 
+                role.name === 'SALES_MANAGER' || 
+                role.name === 'ADMIN'
+            );
+
+            if (!hasAccess) {
+                messageDiv.textContent = 'Access Denied: Sales Representative role required';
+                messageDiv.className = 'message error';
+                setTimeout(() => {
+                    window.location.href = '/profile.html';
+                }, 2000);
+                return;
+            }
+
+            // Test sales API access
+            fetch('/api/sales/dashboard', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': userId
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    messageDiv.textContent = '✅ ' + result.message;
+                    messageDiv.className = 'message success';
+                }
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+            });
+
+            // Logout functionality
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.clear();
+                window.location.href = '/login.html';
+            });
+        });
+    </script>
+</body>
+</html>

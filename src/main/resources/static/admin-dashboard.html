@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Simple CRM</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #dc3545;
+        }
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        .card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .nav-links a {
+            padding: 0.5rem 1rem;
+            background-color: #f8f9fa;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1 style="margin: 0;">🛡️ Administrator Dashboard</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Full system access and control</p>
+        </div>
+
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>System Management</h3>
+                <p>✅ User Management</p>
+                <p>✅ Role Configuration</p>
+                <p>✅ Permission Settings</p>
+                <p>✅ System Settings</p>
+            </div>
+            <div class="card">
+                <h3>Data Access</h3>
+                <p>✅ All Customers</p>
+                <p>✅ All Opportunities</p>
+                <p>✅ All Reports</p>
+                <p>✅ Analytics Dashboard</p>
+            </div>
+            <div class="card">
+                <h3>Advanced Features</h3>
+                <p>✅ Data Export</p>
+                <p>✅ Audit Logs</p>
+                <p>✅ API Configuration</p>
+                <p>✅ Integration Settings</p>
+            </div>
+        </div>
+
+        <div style="background-color: #fff3cd; padding: 1rem; border-radius: 4px; border-left: 4px solid #ffc107; margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 0.5rem 0; color: #856404;">⚠️ Administrator Notice</h3>
+            <p style="margin: 0; color: #856404;">You have full access to all system features and data. Use your privileges responsibly.</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="nav-links">
+            <a href="/profile.html">👤 My Profile</a>
+            <a href="/manager-dashboard.html">📊 Manager View</a>
+            <a href="/sales-dashboard.html">💼 Sales View</a>
+            <a href="/login.html" id="logoutLink">🚪 Logout</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageDiv = document.getElementById('message');
+            const userId = localStorage.getItem('userId');
+
+            // Check if user has admin role
+            const roles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+            const isAdmin = roles.some(role => role.name === 'ADMIN');
+
+            if (!isAdmin) {
+                messageDiv.textContent = 'Access Denied: Administrator role required';
+                messageDiv.className = 'message error';
+                setTimeout(() => {
+                    window.location.href = '/profile.html';
+                }, 2000);
+                return;
+            }
+
+            // Test admin API access
+            fetch('/api/admin/users', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': userId
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    messageDiv.textContent = '✅ ' + result.message;
+                    messageDiv.className = 'message success';
+                }
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+            });
+
+            // Logout functionality
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.clear();
+                window.location.href = '/login.html';
+            });
+        });
+    </script>
+</body>
+</html>

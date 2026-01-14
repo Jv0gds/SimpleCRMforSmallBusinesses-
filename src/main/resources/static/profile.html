@@ -9,6 +9,24 @@
 <body>
     <div class="container">
         <h2>User Profile</h2>
+        
+        <!-- Role Information Section -->
+        <div id="roleSection" class="role-section" style="background-color: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #333;">Your Roles</h3>
+            <div id="rolesList" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+        </div>
+        
+        <!-- Quick Links based on role -->
+        <div id="quickLinks" class="quick-links" style="margin-bottom: 1.5rem; display: none;">
+            <h3 style="color: #333;">Quick Links</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <a id="adminLink" href="/admin-dashboard.html" style="display: none; padding: 0.5rem 1rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 4px;">Admin Dashboard</a>
+                <a id="managerLink" href="/manager-dashboard.html" style="display: none; padding: 0.5rem 1rem; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;">Manager Dashboard</a>
+                <a id="salesLink" href="/sales-dashboard.html" style="display: none; padding: 0.5rem 1rem; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px;">Sales Dashboard</a>
+            </div>
+        </div>
+        
+        <h3 style="color: #333;">Profile Information</h3>
         <form id="profileForm">
             <div class="form-group">
                 <label for="email">Email</label>
@@ -41,11 +59,77 @@
             const profileForm = document.getElementById('profileForm');
             const messageDiv = document.getElementById('message');
 
-            // Mock user ID. In a real application, this would come from a session or token.
-            const userId = 1;
+            // Get user ID from localStorage (set during login)
+            const userId = localStorage.getItem('userId') || 1;
 
-            // Fetch user profile on page load
-            fetch('/api/user/profile', {
+            // Function to display roles
+            function displayRoles(roles) {
+                const rolesList = document.getElementById('rolesList');
+                const quickLinks = document.getElementById('quickLinks');
+                const adminLink = document.getElementById('adminLink');
+                const managerLink = document.getElementById('managerLink');
+                const salesLink = document.getElementById('salesLink');
+                
+                rolesList.innerHTML = '';
+                let hasLinks = false;
+                
+                if (roles && roles.length > 0) {
+                    roles.forEach(role => {
+                        const badge = document.createElement('span');
+                        badge.style.cssText = 'padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500;';
+                        
+                        // Color code based on role level
+                        switch(role.name) {
+                            case 'ADMIN':
+                                badge.style.backgroundColor = '#dc3545';
+                                badge.style.color = 'white';
+                                badge.textContent = '🛡️ Administrator';
+                                adminLink.style.display = 'inline-block';
+                                hasLinks = true;
+                                break;
+                            case 'SALES_MANAGER':
+                                badge.style.backgroundColor = '#28a745';
+                                badge.style.color = 'white';
+                                badge.textContent = '📊 Sales Manager';
+                                managerLink.style.display = 'inline-block';
+                                hasLinks = true;
+                                break;
+                            case 'SALES_REP':
+                                badge.style.backgroundColor = '#17a2b8';
+                                badge.style.color = 'white';
+                                badge.textContent = '💼 Sales Representative';
+                                salesLink.style.display = 'inline-block';
+                                hasLinks = true;
+                                break;
+                            case 'USER':
+                                badge.style.backgroundColor = '#6c757d';
+                                badge.style.color = 'white';
+                                badge.textContent = '👤 User';
+                                break;
+                            case 'GUEST':
+                                badge.style.backgroundColor = '#e9ecef';
+                                badge.style.color = '#495057';
+                                badge.textContent = '👥 Guest';
+                                break;
+                            default:
+                                badge.style.backgroundColor = '#f8f9fa';
+                                badge.style.color = '#495057';
+                                badge.textContent = role.name;
+                        }
+                        
+                        rolesList.appendChild(badge);
+                    });
+                    
+                    if (hasLinks) {
+                        quickLinks.style.display = 'block';
+                    }
+                } else {
+                    rolesList.textContent = 'No roles assigned';
+                }
+            }
+
+            // Fetch user profile with roles on page load
+            fetch('/api/user/profile-with-roles', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,13 +142,33 @@
                 }
                 return response.json();
             })
-            .then(data => {
-                document.getElementById('email').value = data.email;
-                document.getElementById('username').value = data.username;
+            .then(result => {
+                if (result.success && result.data) {
+                    document.getElementById('email').value = result.data.email;
+                    document.getElementById('username').value = result.data.username;
+                    
+                    // Display roles
+                    displayRoles(result.data.roles);
+                    
+                    // Save roles to localStorage for future use
+                    if (result.data.roles) {
+                        localStorage.setItem('userRoles', JSON.stringify(result.data.roles));
+                    }
+                }
             })
             .catch(error => {
                 messageDiv.textContent = `Error: ${error.message}`;
                 messageDiv.className = 'message error';
+                
+                // Try to display cached roles if available
+                const cachedRoles = localStorage.getItem('userRoles');
+                if (cachedRoles) {
+                    try {
+                        displayRoles(JSON.parse(cachedRoles));
+                    } catch (e) {
+                        console.error('Error parsing cached roles:', e);
+                    }
+                }
             });
 
             // Handle profile update
@@ -113,6 +217,20 @@
                     messageDiv.className = 'message error';
                 });
             });
+            
+            // Add logout functionality
+            const logoutLink = document.querySelector('.logout-link a');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Clear localStorage
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userRoles');
+                    // Redirect to login
+                    window.location.href = '/login.html';
+                });
+            }
         });
     </script>
 </body>

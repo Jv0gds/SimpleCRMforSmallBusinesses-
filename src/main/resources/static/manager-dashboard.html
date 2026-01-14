@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard - Simple CRM</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        .card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .nav-links a {
+            padding: 0.5rem 1rem;
+            background-color: #f8f9fa;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1 style="margin: 0;">📊 Sales Manager Dashboard</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Team management and oversight</p>
+        </div>
+
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>Team Management</h3>
+                <p>✅ View Team Members</p>
+                <p>✅ Monitor Team Performance</p>
+                <p>✅ Assign Opportunities</p>
+                <p>✅ Review Activities</p>
+            </div>
+            <div class="card">
+                <h3>Data Access</h3>
+                <p>✅ Team Customers</p>
+                <p>✅ Team Opportunities</p>
+                <p>✅ Team Reports</p>
+                <p>✅ Performance Metrics</p>
+            </div>
+            <div class="card">
+                <h3>Management Features</h3>
+                <p>✅ Approve Deals</p>
+                <p>✅ Set Targets</p>
+                <p>✅ Generate Reports</p>
+                <p>✅ Coach Team Members</p>
+            </div>
+        </div>
+
+        <div style="background-color: #d4edda; padding: 1rem; border-radius: 4px; border-left: 4px solid #28a745; margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 0.5rem 0; color: #155724;">📈 Manager Notice</h3>
+            <p style="margin: 0; color: #155724;">You have access to your team's data and can manage team operations.</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="nav-links">
+            <a href="/profile.html">👤 My Profile</a>
+            <a href="/sales-dashboard.html">💼 Sales View</a>
+            <a href="/login.html" id="logoutLink">🚪 Logout</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageDiv = document.getElementById('message');
+            const userId = localStorage.getItem('userId');
+
+            // Check if user has manager or admin role
+            const roles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+            const hasAccess = roles.some(role => 
+                role.name === 'SALES_MANAGER' || role.name === 'ADMIN'
+            );
+
+            if (!hasAccess) {
+                messageDiv.textContent = 'Access Denied: Sales Manager role required';
+                messageDiv.className = 'message error';
+                setTimeout(() => {
+                    window.location.href = '/profile.html';
+                }, 2000);
+                return;
+            }
+
+            // Test manager API access
+            fetch('/api/manager/dashboard', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': userId
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    messageDiv.textContent = '✅ ' + result.message;
+                    messageDiv.className = 'message success';
+                }
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+            });
+
+            // Logout functionality
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.clear();
+                window.location.href = '/login.html';
+            });
+        });
+    </script>
+</body>
+</html>
