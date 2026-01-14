@@ -22,4 +22,10 @@ public interface UserService {
      * @return 更新后的用户个人资料DTO
      */
     UserProfileDto updateUserProfile(Long userId, UpdateProfileRequest request);
+    /**
+     * 处理用户角色升级请求
+     * @param userId 用户ID
+     * @param newRoleName 新的角色名称
+     */
+    void requestRoleUpgrade(Long userId, String newRoleName);
 }

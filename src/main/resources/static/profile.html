@@ -49,6 +49,24 @@
             <button type="submit">Update Profile</button>
         </form>
         <div id="message" class="message"></div>
+
+        <hr style="margin: 2rem 0;">
+
+        <!-- Role Upgrade Section -->
+        <h3 style="color: #333;">Request Role Upgrade</h3>
+        <p>You can request an upgrade to a higher role. This will be reviewed by an administrator.</p>
+        <form id="upgradeForm">
+            <div class="form-group">
+                <label for="newRole">Select New Role</label>
+                <select id="newRole" name="newRole" required>
+                    <option value="">--Please choose a role--</option>
+                    <option value="SALES_REP">Sales Representative</option>
+                    <option value="SALES_MANAGER">Sales Manager</option>
+                </select>
+            </div>
+            <button type="submit">Request Upgrade</button>
+        </form>
+        
         <div class="logout-link">
              <a href="/login.html">Logout</a>
         </div>
@@ -218,6 +236,43 @@
                 });
             });
             
+            // Handle role upgrade request
+            const upgradeForm = document.getElementById('upgradeForm');
+            if(upgradeForm) {
+                upgradeForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    const newRole = document.getElementById('newRole').value;
+                    if (!newRole) {
+                        messageDiv.textContent = 'Please select a role to upgrade to.';
+                        messageDiv.className = 'message error';
+                        return;
+                    }
+
+                    fetch('/api/user/upgrade-role', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-User-Id': userId
+                        },
+                        body: JSON.stringify({ newRole: newRole })
+                    })
+                    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (!ok) {
+                            throw new Error(data.message || 'An unknown error occurred.');
+                        }
+                        messageDiv.textContent = data.message || 'Role upgrade request submitted successfully!';
+                        messageDiv.className = 'message success';
+                        upgradeForm.reset();
+                    })
+                    .catch(error => {
+                        messageDiv.textContent = `Error: ${error.message}`;
+                        messageDiv.className = 'message error';
+                    });
+                });
+            }
+
             // Add logout functionality
             const logoutLink = document.querySelector('.logout-link a');
             if (logoutLink) {

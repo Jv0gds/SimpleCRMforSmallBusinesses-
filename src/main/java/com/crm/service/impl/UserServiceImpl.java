@@ -24,6 +24,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServiceImpl.class);
+
     @Override
     @Transactional
     public User register(User user) {
@@ -120,5 +122,31 @@ public class UserServiceImpl implements UserService {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+    }
+    @Override
+    @Transactional
+    public void requestRoleUpgrade(Long userId, String newRoleName) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId cannot be null");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        // Prevent requests for non-upgradable or invalid roles (e.g., ADMIN is manual)
+        if ("USER".equalsIgnoreCase(newRoleName) || "GUEST".equalsIgnoreCase(newRoleName) || "ADMIN".equalsIgnoreCase(newRoleName)) {
+            throw new IllegalArgumentException("Invalid role for an upgrade request: " + newRoleName);
+        }
+
+        Role roleToUpgrade = roleRepository.findByName(newRoleName)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + newRoleName));
+
+        // Check if user already has the role
+        if (user.getRoles().contains(roleToUpgrade)) {
+            throw new IllegalStateException("User already has the requested role: " + newRoleName);
+        }
+
+        // In a real application, this would trigger an approval workflow.
+        // For now, we log the request as a placeholder for that process.
+        logger.info("Role upgrade request received for user '{}' to role '{}'. This requires manual admin approval.", user.getEmail(), roleToUpgrade.getName());
     }
 }

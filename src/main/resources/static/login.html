@@ -103,15 +103,72 @@
     </div>
 
     <script>
-        window.addEventListener('load', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            const loginForm = document.getElementById('loginForm');
             const messageDiv = document.getElementById('message');
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
 
-            if (error) {
-                messageDiv.textContent = decodeURIComponent(error);
-                messageDiv.classList.add('error');
-            }
+            // Handle form submission with Fetch. This approach is compatible with Spring Security's
+            // formLogin() filter chain, which now returns JSON thanks to our custom handlers.
+            loginForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                // Spring Security's formLogin() expects form-urlencoded data by default.
+                const formData = new URLSearchParams();
+                formData.append('email', email);
+                formData.append('password', password);
+
+                fetch(loginForm.action, { // The action is "/api/login"
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // We expect a JSON response from our custom success/failure handlers.
+                    if (!response.ok) {
+                        // For failure (e.g., 401), the failure handler returns a JSON body.
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    // This block executes on successful authentication (200 OK)
+                    if (result.success && result.data) {
+                        // SUCCESS: Store user info to localStorage
+                        localStorage.setItem('userId', result.data.id);
+                        localStorage.setItem('userEmail', result.data.email);
+
+                        // Client-side redirect based on user role from response
+                        const roles = result.data.roles || [];
+                        let highestRole = roles.reduce((max, role) => max.level > role.level ? max : role, { name: 'GUEST', level: 0 });
+                        
+                        let targetUrl = '/dashboard.html'; // Default for regular USER
+                        switch (highestRole.name) {
+                            case 'ADMIN':
+                                targetUrl = '/admin-dashboard.html';
+                                break;
+                            case 'SALES_MANAGER':
+                                targetUrl = '/manager-dashboard.html';
+                                break;
+                            case 'SALES_REP':
+                                targetUrl = '/sales-dashboard.html';
+                                break;
+                        }
+                        window.location.href = targetUrl;
+                    } else {
+                        // Should not happen if success is true, but as a fallback:
+                        messageDiv.textContent = result.message || 'Login failed!';
+                        messageDiv.className = 'message error';
+                    }
+                })
+                .catch(errorResult => {
+                    // This block catches network errors or failures from the server (e.g., 401)
+                    console.error('Login Error:', errorResult);
+                    messageDiv.textContent = errorResult.message || 'An error occurred during login.';
+                    messageDiv.className = 'message error';
+                });
+            });
         });
     </script>
 </body>

@@ -6,6 +6,7 @@ import com.crm.dto.UserProfileDto;
 import com.crm.dto.UserProfileWithRolesDto;
 import com.crm.dto.RoleDto;
 import com.crm.dto.ApiResponse;
+import com.crm.dto.UpgradeRoleRequest;
 import com.crm.model.User;
 import com.crm.service.UserService;
 import com.crm.repository.UserRepository;
@@ -123,6 +124,30 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("更新个人资料失败：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 用户提交角色升级请求
+     * @param userId 用户ID
+     * @param request 包含新角色名称的请求
+     * @return 响应结果
+     */
+    @PostMapping("/user/upgrade-role")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> requestRoleUpgrade(
+            @RequestHeader(value = "X-User-Id", required = true) Long userId,
+            @Valid @RequestBody UpgradeRoleRequest request) {
+        try {
+            userService.requestRoleUpgrade(userId, request.getNewRole());
+            return ResponseEntity.ok(ApiResponse.success("角色升级申请已提交", null));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (RuntimeException e) {
+            // This could be a user-not-found or role-not-found exception from the service
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
         }
     }
 
