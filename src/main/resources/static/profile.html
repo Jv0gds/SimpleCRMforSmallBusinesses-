@@ -37,10 +37,83 @@
     </div>
 
     <script>
-        // Frontend logic to fetch data and handle form submission will be added in the next step.
-        // For now, you can populate the form with dummy data for styling purposes.
-        document.getElementById('email').value = 'user@example.com';
-        document.getElementById('username').value = 'current_user';
+        document.addEventListener('DOMContentLoaded', function () {
+            const profileForm = document.getElementById('profileForm');
+            const messageDiv = document.getElementById('message');
+
+            // Mock user ID. In a real application, this would come from a session or token.
+            const userId = 1;
+
+            // Fetch user profile on page load
+            fetch('/api/user/profile', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Id': userId
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user profile');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('email').value = data.email;
+                document.getElementById('username').value = data.username;
+            })
+            .catch(error => {
+                messageDiv.textContent = `Error: ${error.message}`;
+                messageDiv.className = 'message error';
+            });
+
+            // Handle profile update
+            profileForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const username = document.getElementById('username').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                const payload = {
+                    username,
+                    newPassword,
+                    confirmPassword
+                };
+                
+                // Only include password fields if they are filled
+                if (!newPassword && !confirmPassword) {
+                    delete payload.newPassword;
+                    delete payload.confirmPassword;
+                }
+
+
+                fetch('/api/user/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json().then(data => ({ ok: response.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) {
+                        throw new Error(data.message || 'An unknown error occurred.');
+                    }
+                    messageDiv.textContent = data.message;
+                    messageDiv.className = 'message success';
+                    
+                    // Clear password fields after successful update
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                })
+                .catch(error => {
+                    messageDiv.textContent = `Error: ${error.message}`;
+                    messageDiv.className = 'message error';
+                });
+            });
+        });
     </script>
 </body>
 </html>
