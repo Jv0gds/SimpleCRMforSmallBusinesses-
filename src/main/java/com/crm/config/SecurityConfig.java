@@ -20,8 +20,11 @@ public class SecurityConfig {
 
     private final LoginSuccessHandler loginSuccessHandler;
 
-    public SecurityConfig(LoginSuccessHandler loginSuccessHandler) {
+    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+
+    public SecurityConfig(LoginSuccessHandler loginSuccessHandler, CustomAuthenticationFailureHandler customAuthenticationFailureHandler) {
         this.loginSuccessHandler = loginSuccessHandler;
+        this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
     }
 
     /**
@@ -96,7 +99,7 @@ public class SecurityConfig {
                 .usernameParameter("email")                  // 用户名参数（使用邮箱）
                 .passwordParameter("password")               // 密码参数
                 .successHandler(loginSuccessHandler)         // 登录成功处理器（根据角色跳转）
-                .failureUrl("/login.html?error=true")       // 登录失败跳转URL
+                .failureHandler(customAuthenticationFailureHandler) // 登录失败处理器
                 .permitAll()
             )
             

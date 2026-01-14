@@ -109,13 +109,13 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         // 根据角色名称匹配跳转目标
         switch (roleName) {
             case "ADMIN":
-                return "/admin/dashboard";
+                return "/admin-dashboard.html"; // ????????????.html
             
             case "SALES_MANAGER":
-                return "/manager/dashboard";
+                return "/manager-dashboard.html"; // ????????????.html
             
             case "SALES_REP":
-                return "/sales/dashboard";
+                return "/sales-dashboard.html"; // ????????????.html
             
             case "USER":
                 return "/profile.html";

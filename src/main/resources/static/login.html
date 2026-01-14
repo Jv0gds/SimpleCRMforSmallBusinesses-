@@ -85,7 +85,7 @@
 <body>
     <div class="container">
         <h2>Login</h2>
-        <form id="loginForm">
+        <form id="loginForm" method="POST" action="/api/login">
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required>
@@ -103,109 +103,13 @@
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        window.addEventListener('load', function() {
             const messageDiv = document.getElementById('message');
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
 
-            messageDiv.textContent = '';
-            messageDiv.className = 'message';
-
-            if (!email || !password) {
-                messageDiv.textContent = 'Please fill in all fields.';
-                messageDiv.classList.add('error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    messageDiv.textContent = 'Login successful! Redirecting...';
-                    messageDiv.classList.add('success');
-                    
-                    // Save user ID to localStorage
-                    if (result.data && result.data.id) {
-                        localStorage.setItem('userId', result.data.id);
-                        localStorage.setItem('userEmail', result.data.email);
-                        
-                        // Fetch user roles after successful login
-                        try {
-                            const rolesResponse = await fetch('/api/user/profile-with-roles', {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-User-Id': result.data.id
-                                }
-                            });
-                            
-                            if (rolesResponse.ok) {
-                                const rolesResult = await rolesResponse.json();
-                                if (rolesResult.success && rolesResult.data.roles) {
-                                    // Save roles to localStorage
-                                    localStorage.setItem('userRoles', JSON.stringify(rolesResult.data.roles));
-                                    
-                                    // Redirect based on highest role level
-                                    const roles = rolesResult.data.roles;
-                                    let highestLevel = 0;
-                                    let redirectUrl = '/profile.html';
-                                    
-                                    roles.forEach(role => {
-                                        if (role.level > highestLevel) {
-                                            highestLevel = role.level;
-                                            switch(role.name) {
-                                                case 'ADMIN':
-                                                    redirectUrl = '/admin-dashboard.html';
-                                                    break;
-                                                case 'SALES_MANAGER':
-                                                    redirectUrl = '/manager-dashboard.html';
-                                                    break;
-                                                case 'SALES_REP':
-                                                    redirectUrl = '/sales-dashboard.html';
-                                                    break;
-                                                case 'USER':
-                                                    redirectUrl = '/profile.html';
-                                                    break;
-                                            }
-                                        }
-                                    });
-                                    
-                                    // Redirect after a short delay
-                                    setTimeout(() => {
-                                        window.location.href = redirectUrl;
-                                    }, 1000);
-                                } else {
-                                    // No roles found, redirect to profile
-                                    setTimeout(() => {
-                                        window.location.href = '/profile.html';
-                                    }, 1000);
-                                }
-                            }
-                        } catch (roleError) {
-                            console.error('Error fetching roles:', roleError);
-                            // Still redirect to profile on error
-                            setTimeout(() => {
-                                window.location.href = '/profile.html';
-                            }, 1000);
-                        }
-                    }
-                } else {
-                    messageDiv.textContent = result.message || 'Login failed. Please check your credentials.';
-                    messageDiv.classList.add('error');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                messageDiv.textContent = 'An error occurred. Please try again later.';
+            if (error) {
+                messageDiv.textContent = decodeURIComponent(error);
                 messageDiv.classList.add('error');
             }
         });

@@ -2,7 +2,9 @@ package com.crm.service.impl;
 
 import com.crm.dto.UpdateProfileRequest;
 import com.crm.dto.UserProfileDto;
+import com.crm.model.Role;
 import com.crm.model.User;
+import com.crm.repository.RoleRepository;
 import com.crm.repository.UserRepository;
 import com.crm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +20,23 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Override
+    @Transactional
     public User register(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Error: Email is already in use!");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
+        // 自动分配USER角色给新注册用户
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Error: USER role not found"));
+        user.getRoles().add(userRole);
+        
         return userRepository.save(user);
     }
 

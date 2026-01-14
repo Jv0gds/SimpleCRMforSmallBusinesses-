@@ -1,5 +1,7 @@
 package com.crm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -47,6 +49,7 @@ public class User {
     
     /**
      * 用户关联的角色集合（多对多关系）
+     * 使用@JsonIgnoreProperties忽略Role中的users字段，防止循环引用
      */
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
@@ -54,6 +57,7 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
         inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
+    @JsonIgnoreProperties({"users", "permissions"})
     private Set<Role> roles = new HashSet<>();
     
     /**
@@ -113,6 +117,7 @@ public class User {
         this.email = email;
     }
     
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getPassword() {
         return password;
     }

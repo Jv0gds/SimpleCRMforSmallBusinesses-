@@ -1,5 +1,6 @@
 package com.crm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -47,8 +48,10 @@ public class Permission {
     
     /**
      * 权限关联的角色集合（多对多关系）
+     * 使用@JsonIgnoreProperties忽略Role中的permissions和users字段，防止循环引用
      */
     @ManyToMany(mappedBy = "permissions")
+    @JsonIgnoreProperties({"permissions", "users"})
     private Set<Role> roles = new HashSet<>();
     
     /**
